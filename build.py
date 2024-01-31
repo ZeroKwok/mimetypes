@@ -9,24 +9,32 @@
 
 import os
 import re
+import json
 import copy
 import mimetypes
 import platform
 
 mimetypes.init(files=None)
 
+local = os.path.abspath(os.path.dirname(__file__))
 items = copy.copy(mimetypes.types_map)
-addin = {
-    ".m4a" : "audio/mp4",
-    ".m4b" : "audio/mp4",
-    ".m4p" : "audio/mp4",
-    ".m4r" : "audio/mp4",
-    ".m4v" : "video/mp4",
-    ".m4u" : "video/vnd.mpegurl",
-}
+addin = {}
+try:
+    with open(os.path.join(local, 'collection.json'), 'rb') as f:
+        addin = json.loads(f.read().decode())
+except FileNotFoundError:
+    addin = {
+        ".m4a" : "audio/mp4",
+        ".m4b" : "audio/mp4",
+        ".m4p" : "audio/mp4",
+        ".m4r" : "audio/mp4",
+        ".m4v" : "video/mp4",
+        ".m4u" : "video/vnd.mpegurl",
+    }
 
 items.update({key : addin[key] for key in addin if key not in items})
-items = sorted(items.items(), key=lambda x: (x[1], x[0]))
+with open(os.path.join(local, 'collection.json'), 'wb') as f:
+    f.write(json.dumps(items, indent=2).encode())
 print(f'Original: {len(mimetypes.types_map)}, Additional: {len(addin)}, Output: {len(items)}')
 
 header = '''\
@@ -88,6 +96,7 @@ inline std::string from_filename(const std::filesystem::path& filename, bool str
 #endif // mimetypes_h__
 '''
 
+items = sorted(items.items(), key=lambda x: (x[1], x[0]))
 lines = re.split('\r\n|\n', header)
 
 classes = set()
@@ -103,8 +112,7 @@ for k, v in items:
 
 lines += re.split('\r\n|\n', footer)
 
-dir = os.path.abspath(os.path.dirname(__file__))
-out = os.path.join(dir, 'mimetypes.hpp')
+out = os.path.join(local, 'mimetypes.hpp')
 ends = '\r\n' if platform.system() == 'Windows' else '\n'
 with open(out, 'wb') as f:
     f.write(ends.join(lines).encode('utf-8'))
