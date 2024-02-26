@@ -11,8 +11,8 @@ import os
 import re
 import json
 import copy
-import mimetypes
 import platform
+import mimetypes
 
 mimetypes.init(files=None)
 
@@ -34,7 +34,7 @@ except FileNotFoundError:
 
 items.update({key : addin[key] for key in addin if key not in items})
 with open(os.path.join(local, 'collection.json'), 'wb') as f:
-    f.write(json.dumps(items, indent=2).encode())
+    f.write(json.dumps(items, indent=2, sort_keys=True).encode())
 print(f'Original: {len(mimetypes.types_map)}, Additional: {len(addin)}, Output: {len(items)}')
 
 header = '''\
@@ -49,8 +49,10 @@ header = '''\
 #define mimetypes_h__
 
 #include <map>
+#include <cctype>
 #include <string>
 #include <string.h>
+#include <algorithm>
 #include <filesystem>
 
 namespace mimetypes {
@@ -74,8 +76,15 @@ inline std::string from_extension(const std::string& extension, bool strict = fa
     if (extension.empty())
         return strict ? "" : "application/octet-stream";
 
+    auto _tolower = [](std::string s) -> std::string {
+        std::transform(s.begin(), s.end(), s.begin(),
+            [](unsigned char c) { return std::tolower(c); }
+        );
+        return s;
+    };
+
     auto _get = [&](auto name) {
-        auto item = detail::__mimetypes.find(name);
+        auto item = detail::__mimetypes.find(_tolower(name));
         if (item != detail::__mimetypes.end())
             return item->second;
         return strict ? "" : "application/octet-stream";
