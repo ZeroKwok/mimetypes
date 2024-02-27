@@ -23,14 +23,22 @@ try:
     with open(os.path.join(local, 'collection.json'), 'rb') as f:
         addin = json.loads(f.read().decode())
 except FileNotFoundError:
-    addin = {
-        ".m4a" : "audio/mp4",
-        ".m4b" : "audio/mp4",
-        ".m4p" : "audio/mp4",
-        ".m4r" : "audio/mp4",
-        ".m4v" : "video/mp4",
-        ".m4u" : "video/vnd.mpegurl",
-    }
+    pass
+
+predefine = {
+    ".m4a"    : "audio/mp4",
+    ".m4b"    : "audio/mp4",
+    ".m4p"    : "audio/mp4",
+    ".m4r"    : "audio/mp4",
+    ".m4v"    : "video/mp4",
+    ".m4u"    : "video/vnd.mpegurl",
+    ".pjpeg"  : "image/pjpeg",
+    ".pjp"    : "image/pjpeg",
+    ".ape"    : "audio/ape",
+    ".numbers": "application/x-iwork-numbers-sffnumbers",
+    ".pages"  : "application/x-iwork-pages-sffpages",
+}
+addin.update(predefine)
 
 items.update({key : addin[key] for key in addin if key not in items})
 with open(os.path.join(local, 'collection.json'), 'wb') as f:
@@ -76,7 +84,7 @@ inline std::string from_extension(const std::string& extension, bool strict = fa
     if (extension.empty())
         return strict ? "" : "application/octet-stream";
 
-    auto _tolower = [](std::string s) -> std::string {
+    auto _lower = [](std::string s) -> std::string {
         std::transform(s.begin(), s.end(), s.begin(),
             [](unsigned char c) { return std::tolower(c); }
         );
@@ -84,16 +92,17 @@ inline std::string from_extension(const std::string& extension, bool strict = fa
     };
 
     auto _get = [&](auto name) {
-        auto item = detail::__mimetypes.find(_tolower(name));
+        auto item = detail::__mimetypes.find(name);
         if (item != detail::__mimetypes.end())
             return item->second;
         return strict ? "" : "application/octet-stream";
     };
 
-    if (extension[0] == '.' && extension.size() > 1)
-        return _get(extension.c_str() + 1);
+    auto extension1 = _lower(extension);
+    if (extension1[0] == '.' && extension1.size() > 1)
+        return _get(extension1.c_str() + 1);
     else
-        return _get(extension.c_str());
+        return _get(extension1.c_str());
 }
 
 inline std::string from_filename(const std::filesystem::path& filename, bool strict = false) {

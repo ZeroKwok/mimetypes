@@ -719,6 +719,8 @@ namespace detail {
         { "isp", "application/x-internet-signup" },
         { "iii", "application/x-iphone" },
         { "iso", "application/x-iso9660-image" },
+        { "numbers", "application/x-iwork-numbers-sffnumbers" },
+        { "pages", "application/x-iwork-pages-sffpages" },
         { "jnlp", "application/x-java-jnlp-file" },
         { "jmz", "application/x-jmol" },
         { "kil", "application/x-killustrator" },
@@ -907,6 +909,7 @@ namespace detail {
         { "amr", "audio/amr" },
         { "awb", "audio/amr-wb" },
         { "axa", "audio/annodex" },
+        { "ape", "audio/ape" },
         { "au", "audio/basic" },
         { "snd", "audio/basic" },
         { "csd", "audio/csound" },
@@ -918,11 +921,11 @@ namespace detail {
         { "midi", "audio/mid" },
         { "rmi", "audio/mid" },
         { "kar", "audio/midi" },
+        { "m4a", "audio/mp4" },
         { "m4b", "audio/mp4" },
+        { "m4p", "audio/mp4" },
         { "m4r", "audio/mp4" },
         { "mp4a", "audio/mp4" },
-        { "m4a", "audio/mp4a-latm" },
-        { "m4p", "audio/mp4a-latm" },
         { "m2a", "audio/mpeg" },
         { "m3a", "audio/mpeg" },
         { "mp2", "audio/mpeg" },
@@ -1096,6 +1099,8 @@ namespace detail {
         { "jpx", "image/jpx" },
         { "ktx", "image/ktx" },
         { "pict", "image/pict" },
+        { "pjp", "image/pjpeg" },
+        { "pjpeg", "image/pjpeg" },
         { "png", "image/png" },
         { "btif", "image/prs.btif" },
         { "sgi", "image/sgi" },
@@ -1384,6 +1389,7 @@ namespace detail {
         { "jpm", "video/jpm" },
         { "mj2", "video/mj2" },
         { "mjp2", "video/mj2" },
+        { "m4v", "video/mp4" },
         { "mp4", "video/mp4" },
         { "mp4v", "video/mp4" },
         { "mpg4", "video/mp4" },
@@ -1430,7 +1436,6 @@ namespace detail {
         { "flv", "video/x-flv" },
         { "lsf", "video/x-la-asf" },
         { "lsx", "video/x-la-asf" },
-        { "m4v", "video/x-m4v" },
         { "mk3d", "video/x-matroska" },
         { "mks", "video/x-matroska" },
         { "mkv", "video/x-matroska" },
@@ -1460,7 +1465,7 @@ inline std::string from_extension(const std::string& extension, bool strict = fa
     if (extension.empty())
         return strict ? "" : "application/octet-stream";
 
-    auto _tolower = [](std::string s) -> std::string {
+    auto _lower = [](std::string s) -> std::string {
         std::transform(s.begin(), s.end(), s.begin(),
             [](unsigned char c) { return std::tolower(c); }
         );
@@ -1468,16 +1473,17 @@ inline std::string from_extension(const std::string& extension, bool strict = fa
     };
 
     auto _get = [&](auto name) {
-        auto item = detail::__mimetypes.find(_tolower(name));
+        auto item = detail::__mimetypes.find(name);
         if (item != detail::__mimetypes.end())
             return item->second;
         return strict ? "" : "application/octet-stream";
     };
 
-    if (extension[0] == '.' && extension.size() > 1)
-        return _get(extension.c_str() + 1);
+    auto extension1 = _lower(extension);
+    if (extension1[0] == '.' && extension1.size() > 1)
+        return _get(extension1.c_str() + 1);
     else
-        return _get(extension.c_str());
+        return _get(extension1.c_str());
 }
 
 inline std::string from_filename(const std::filesystem::path& filename, bool strict = false) {
